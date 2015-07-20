@@ -10,14 +10,14 @@
     <orderEntry type="module-library">
       <library>
         <CLASSES>
-          <root url="file://C:/JavaLib/p4jlib/lib" />
+          <root url="file://C:/JavaLib/p4jlib" />
         </CLASSES>
         <JAVADOC />
         <SOURCES>
-          <root url="file://C:/JavaLib/p4jlib/lib" />
+          <root url="file://C:/JavaLib/p4jlib" />
         </SOURCES>
-        <jarDirectory url="file://C:/JavaLib/p4jlib/lib" recursive="false" />
-        <jarDirectory url="file://C:/JavaLib/p4jlib/lib" recursive="false" type="SOURCES" />
+        <jarDirectory url="file://C:/JavaLib/p4jlib" recursive="false" />
+        <jarDirectory url="file://C:/JavaLib/p4jlib" recursive="false" type="SOURCES" />
       </library>
     </orderEntry>
   </component>

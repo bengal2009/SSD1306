@@ -24,8 +24,11 @@ import com.pi4j.io.i2c.I2CFactory;
 
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferByte;
-import java.io.IOException;
+import java.io.*;
+import java.nio.charset.Charset;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.logging.Logger;
 
 /**
@@ -149,7 +152,7 @@ public class SSD1306Lib {
         });
 
         init();
-        System.out.println(busNumber);
+//        System.out.println(busNumber);
     }
 
     public synchronized void clear() {
@@ -314,6 +317,68 @@ public class SSD1306Lib {
         } catch (IOException ex) {
 //            LOGGER.log(Level.FINE, "Closing i2c bus");
         }
+    }
+    public static List<String> ReadStrFile(String Filename) {
+        String line;
+        List<String> testlines = new ArrayList<String>();
+        try {
+
+
+
+            InputStream fis = new FileInputStream(Filename);
+            InputStreamReader isr = new InputStreamReader(fis, Charset.forName("GBK"));
+            BufferedReader br = new BufferedReader(isr);
+
+            while ((line = br.readLine()) != null) {
+                // Deal with the line
+//                System.out.println(line);
+                testlines.add(line);
+            }
+
+        } catch (Exception E) {
+
+        }
+        return testlines;
+    }
+    public static byte[] hexStringToBytes(String hexString) {
+        if (hexString == null || hexString.equals("")) {
+            return null;
+        }
+        hexString = hexString.toUpperCase();
+        int length = hexString.length() / 2;
+        char[] hexChars = hexString.toCharArray();
+        byte[] d = new byte[length];
+        for (int i = 0; i < length; i++) {
+            int pos = i * 2;
+            d[i] = (byte) (charToByte(hexChars[pos]) << 4 | charToByte(hexChars[pos + 1]));
+        }
+        return d;
+    }
+
+    private static byte charToByte(char c) {
+        return (byte) "0123456789ABCDEF".indexOf(c);
+    }
+
+    public static byte[] hexToBytes(String hexString) {
+
+        char[] hex = hexString.toCharArray();
+        //??rawData?????b
+        int length = hex.length / 2;
+        byte[] rawData = new byte[length];
+        for (int i = 0; i < length; i++) {
+            //???Nhex?????10?i????
+            int high = Character.digit(hex[i * 2], 16);
+            int low = Character.digit(hex[i * 2 + 1], 16);
+            //?N??@?????G?i????????4??,ex: 00001000 => 10000000 (8=>128)
+            //?M??P??G?????G?i???@?p??ex: 10000000 | 00001100 => 10001100 (137)
+            int value = (high << 4) | low;
+            //?PFFFFFFFF?@???
+            if (value > 127)
+                value -= 256;
+            //?????^byte?NOK
+            rawData[i] = (byte) value;
+        }
+        return rawData;
     }
 
     //simple 7x5 font

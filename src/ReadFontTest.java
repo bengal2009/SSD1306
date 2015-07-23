@@ -4,6 +4,8 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Created by Lin on 2015/7/17.
@@ -44,7 +46,7 @@ public class ReadFontTest {
 //        DispChinese(0,0,16,16,false,FontHash.get("�?"));
 //        DispChineseString(0,0,"abc");
 //        DispChineseString(0, 0, "林测试庭12");
-        DispChineseString(0, 0, "测1ABCD郁试");
+        DispChineseString(0, 0, "测[]1ABCD郁试");
         SSD.update();
         Thread.sleep(7000);
        /* SSD.clear();
@@ -54,8 +56,35 @@ public class ReadFontTest {
         SSD.update();
         Thread.sleep(1000);*/
     }
-
     public static  void DispChineseString(Integer x,Integer y,String S1) throws UnsupportedEncodingException
+    {
+        Integer X_=0,Y_=0;
+        Integer CharPoint=0;
+        ChineseStr CHI=new ChineseStr();
+        byte TempByte[]=S1.getBytes("UTF-8");
+        char ch;
+
+        while(CharPoint<S1.getBytes("UTF-8").length)
+        {
+            ch=(char) TempByte[CharPoint];
+            if(isChinese(ch)){
+                DispChinese(x + X_, y + Y_, 16, 16, false, FontHash.get(new String(TempByte, CharPoint, 3)));
+                X_=X_+16;
+                CharPoint+=3;
+            } else {
+                DispEng(x + X_, y + Y_, 16, 8, false, FontHash.get(new String(TempByte, CharPoint, 1)));
+
+                X_=X_+8;
+                CharPoint+=1;
+            }
+
+        }
+//        ChineseStr.CalNumb(S1);
+//        DispChinese(x, y, 16, 16, false, FontHash.get(ChineseStr.substring(S1,0, 3, "UTF-8")));
+//        DispChinese(10, 0, 16, 16, false, FontHash.get(ChineseStr.substring(S1, 3, "UTF-8")));
+
+    }
+    public static  void DispChineseString1(Integer x,Integer y,String S1) throws UnsupportedEncodingException
     {
         Integer X_=0,Y_=0;
         Integer CharPoint=0;
@@ -69,7 +98,7 @@ public class ReadFontTest {
         while(CharPoint<S1.getBytes("UTF-8").length)
         {
             ch=(char) TempByte[CharPoint];
-            System.out.println("Charpoint:"+CharPoint);
+//            System.out.println("Charpoint:"+CharPoint);
             if(ch>='0'&&ch<='9'){ //数字
 //                digitCount++;
 //                CharPoint++;
@@ -98,7 +127,7 @@ public class ReadFontTest {
 //                System.out.println(new String(TempChar, 0,3));
 
 //                System.out.println(new String(TempByte,CharPoint,3));
-                System.out.println("Char X:"+x+" Char _X:"+X_);
+//                System.out.println("Char X:"+x+" Char _X:"+X_);
                 DispChinese(x + X_, y + Y_, 16, 16, false, FontHash.get(new String(TempByte, CharPoint, 3)));
                 X_=X_+16;
                 CharPoint+=3;
@@ -110,6 +139,34 @@ public class ReadFontTest {
 //        DispChinese(10, 0, 16, 16, false, FontHash.get(ChineseStr.substring(S1, 3, "UTF-8")));
 
     }
+
+
+    public static boolean isContainChinese(String str) {
+
+        Pattern p=Pattern.compile("[u4e00-u9fa5]");
+        Matcher m=p.matcher(str);
+        if(m.find())
+        {
+            return true;
+        }
+        return false;
+    }
+    public static boolean isChinese(char c) {
+           Character.UnicodeBlock ub = Character.UnicodeBlock.of(c);
+           if (   ub == Character.UnicodeBlock.CJK_UNIFIED_IDEOGRAPHS
+               || ub == Character.UnicodeBlock.CJK_COMPATIBILITY_IDEOGRAPHS
+               || ub == Character.UnicodeBlock.CJK_UNIFIED_IDEOGRAPHS_EXTENSION_A
+               || ub == Character.UnicodeBlock.CJK_UNIFIED_IDEOGRAPHS_EXTENSION_B
+               || ub == Character.UnicodeBlock.CJK_SYMBOLS_AND_PUNCTUATION
+               || ub == Character.UnicodeBlock.HALFWIDTH_AND_FULLWIDTH_FORMS
+               )
+               //|| ub == Character.UnicodeBlock.GENERAL_PUNCTUATION)
+           {
+               return true;
+       }
+           return false;
+       }
+
     static String convertToHex(byte[] data) {
         StringBuffer buf = new StringBuffer();
         for (int i = 0; i < data.length; i++) {
@@ -250,7 +307,7 @@ for(Integer k=0;k<2;k++) {
                     if(Invert!=true) {
                         if ((line & 0x01) > 0) {
                             SSD.setPixel(StartX + i, StartY + j + (K * 8), true);
-                            System.out.println("StartX:"+(StartX + i)+"--StartY:"+(StartY + j + (K * 8)));
+//                            System.out.println("StartX:"+(StartX + i)+"--StartY:"+(StartY + j + (K * 8)));
                         }
 
                     }else

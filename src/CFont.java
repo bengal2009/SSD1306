@@ -49,26 +49,46 @@ public class CFont {
     private static SSD1306Lib SSD1;
     public static void main(String[] args) throws Exception {
         SSD1= new SSD1306Lib();
+        boolean DefaultInv=false;
         java.util.Scanner sc=new java.util.Scanner(System.in);
-
-
         SSD1.ReadFontFile("/home/pi/prog/2.TXT");
         SSD1.clear();
-        SSD1.DispStr(0, 16, "林郁庭ABCD");
-
-
+        for (Integer i = 1; i < 5; i++) {
+            if(i==1){
+                SSD1.DispStr(16, (i - 1) * 16, i.toString() + ".林郁庭ABCD",true);
+            }
+            else{
+            SSD1.DispStr(16, (i - 1) * 16, i.toString() + ".林郁庭ABCD",false);
+            }
+        }
         SSD1.update();
-        startscrollright(0x00, 0x08);
+        /*for(Integer j=0;j<8;j++) {
+            SSD1.clear();
+            for (Integer i = 1; i < 5; i++) {
+                SSD1.DispStr(16, (i - 1) * 16, i + ".林郁庭ABCD");
+            }
+            SSD1.update();
+            Thread.sleep(2000);
+            startscrollright(0x00, j);
+            System.out.println("J:"+j);
+            Thread.sleep(2000);
+            stopscroll();
+        }*/
+        /*drawCircle(50, 50, 10);
+        drawLine(0,0,100,30);
+        SSD1.update();
+        startscrollright(0x00, 0x0f);
         Thread.sleep(2000);
-        /*startscrollleft(0x00, 0x0A);
-        Thread.sleep(7000);*/
-        startscrolldiagright(0x00, 0x08);
+        stopscroll();
+        *//*startscrollleft(0x00, 0x0A);
+        Thread.sleep(7000);*//*
+        startscrolldiagright(0x00, 0x0f);
         Thread.sleep(5000);
         stopscroll();
         System.out.println("Scroll down!");
         invertDisplay(true);
         Thread.sleep(5000);
-        invertDisplay(false);
+        invertDisplay(false);*/
         char ch = (char) System.in.read();
 
 //        waitForKeypress();
@@ -186,4 +206,91 @@ public class CFont {
 
         }
     }
+    public static void drawCircle(Integer x0, Integer y0, Integer r
+              ) {
+        Integer f = 1 - r;
+        Integer ddF_x = 1;
+        Integer ddF_y = -2 * r;
+        Integer x = 0;
+        Integer y = r;
+
+        SSD1.setPixel(x0, y0 + r, true);
+        SSD1.setPixel(x0, y0 - r,true);
+        SSD1.setPixel(x0 + r, y0,true  );
+        SSD1.setPixel(x0 - r, y0 ,true );
+
+        while (x<y) {
+            if (f >= 0) {
+                y--;
+                ddF_y += 2;
+                f += ddF_y;
+            }
+            x++;
+            ddF_x += 2;
+            f += ddF_x;
+
+            SSD1.setPixel(x0 + x, y0 + y,true);
+            SSD1.setPixel(x0 - x, y0 + y,true);
+            SSD1.setPixel(x0 + x, y0 - y,true);
+            SSD1.setPixel(x0 - x, y0 - y,true);
+            SSD1.setPixel(x0 + y, y0 + x,true);
+            SSD1.setPixel(x0 - y, y0 + x,true);
+            SSD1.setPixel(x0 + y, y0 - x,true);
+            SSD1.setPixel(x0 - y, y0 - x,true);
+        }
+    }
+    public static void drawLine(Integer x0, Integer y0,
+             Integer x1, Integer y1) {
+        boolean steep = Math.abs(y1 - y0) > Math.abs(x1 - x0);
+        Integer temp;
+        if (steep) {
+            temp=y0;
+            y0=x0;
+            x0=temp;
+//            swap(x0, y0);
+            temp=y1;
+            y1=x1;
+            x1=temp;
+//            swap(x1, y1);
+        }
+
+        if (x0 > x1) {
+            temp=x1;
+            x1=x0;
+            x0=temp;
+//            swap(x0, x1);
+            temp=y1;
+            y1=y0;
+            y0=temp;
+//            swap(y0, y1);
+        }
+
+        Integer dx, dy;
+        dx = x1 - x0;
+        dy = Math.abs(y1 - y0);
+
+        Integer err = dx / 2;
+        Integer ystep;
+
+        if (y0 < y1) {
+            ystep = 1;
+        } else {
+            ystep = -1;
+        }
+
+        for (; x0<=x1; x0++) {
+            if (steep) {
+                SSD1.setPixel(y0, x0, true);
+            } else {
+                SSD1.setPixel(x0, y0, true);
+            }
+            err -= dy;
+            if (err < 0) {
+                y0 += ystep;
+                err += dx;
+            }
+        }
+    }
+
+
 }

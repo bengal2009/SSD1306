@@ -28,6 +28,7 @@ import java.io.*;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.logging.Logger;
 
@@ -103,8 +104,87 @@ public class SSD1306Lib {
     private final I2CBus bus;
     private final I2CDevice device;
 
-    private final byte[] imageBuffer = new byte[(DISPLAY_WIDTH * DISPLAY_HEIGHT) / 8];
+    private static final byte[] imageBuffer = new byte[(DISPLAY_WIDTH * DISPLAY_HEIGHT) / 8];
+    private static HashMap<String, byte[]> FontHash=new HashMap<String, byte[]>();
 
+//    Chinese Font Display Function
+
+    public void  ReadFontFile(String Filename)
+    {
+        List<String>  FontData;
+        FontData=ReadStrFile(Filename);
+        Integer line=3; //Start Line from 3
+        String[] FontArray;
+        while(FontData.get(line).length()>0)
+        {
+            FontArray=FontData.get(line).split(":");
+            FontHash.put(FontArray[1], hexStringToBytes(FontArray[0]));
+            line++;
+
+        }
+    }
+   public static  void DispStr(Integer x,Integer y,String S1) throws UnsupportedEncodingException
+    {
+        Integer X_=0,Y_=0;
+        Integer CharPoint=0;
+        ChineseStr CHI=new ChineseStr();
+        byte TempByte[]=S1.getBytes("UTF-8");
+        char ch;
+
+        while(CharPoint<S1.getBytes("UTF-8").length)
+        {
+            ch=(char) TempByte[CharPoint];
+            if(isChinese(ch)){
+                DispEng(x + X_, y + Y_, 16, 16, false, FontHash.get(new String(TempByte, CharPoint, 3)));
+                X_=X_+16;
+                CharPoint+=3;
+            } else {
+                DispEng(x + X_, y + Y_, 16, 8, false, FontHash.get(new String(TempByte, CharPoint, 1)));
+
+                X_=X_+8;
+                CharPoint+=1;
+            }
+
+        }
+
+    }
+    public  static  void DispEng(int StartX,int StartY,int FontHeight,int FontWidth,Boolean Invert,byte FONT[])
+    {
+        for (int i = 0; i < (FontHeight/8); i++) {
+            for(int h=0;h< FontWidth;h++) {
+                int line = FONT[h+i*FontWidth];
+                for (int j = 0; j < 8; ++j) {
+                    if (Invert != true) {
+                        if ((line & 0x01) > 0) {
+                            WritePixel(StartX + h, StartY + j + i * 8, true);
+                        }
+
+                    } else {
+                        if ((line & 0x01) == 0) {
+                            WritePixel(StartX + h, StartY +j+i*8, true);
+                        }
+                    }
+
+                    line >>= 1;
+                }
+            }
+        }
+    }
+    private static boolean isChinese(char c) {
+        Character.UnicodeBlock ub = Character.UnicodeBlock.of(c);
+        if (   ub == Character.UnicodeBlock.CJK_UNIFIED_IDEOGRAPHS
+                || ub == Character.UnicodeBlock.CJK_COMPATIBILITY_IDEOGRAPHS
+                || ub == Character.UnicodeBlock.CJK_UNIFIED_IDEOGRAPHS_EXTENSION_A
+                || ub == Character.UnicodeBlock.CJK_UNIFIED_IDEOGRAPHS_EXTENSION_B
+                || ub == Character.UnicodeBlock.CJK_SYMBOLS_AND_PUNCTUATION
+                || ub == Character.UnicodeBlock.HALFWIDTH_AND_FULLWIDTH_FORMS
+                )
+        //|| ub == Character.UnicodeBlock.GENERAL_PUNCTUATION)
+        {
+            return true;
+        }
+        return false;
+    }
     /**
      * creates an oled display object with default
      * i2c bus 1 and default display address of 0x3C
@@ -200,6 +280,14 @@ public class SSD1306Lib {
         writeCommand(SSD1306_DISPLAYON);//--turn on oled panel
     }
 
+    public synchronized static void WritePixel(int x, int y, boolean on) {
+        final int pos = x + (y / 8) * DISPLAY_WIDTH;
+        if (on) {
+           imageBuffer[pos] |= (1 << (y & 0x07));
+        } else {
+            imageBuffer[pos] &= ~(1 << (y & 0x07));
+        }
+    }
     public synchronized void setPixel(int x, int y, boolean on) {
         final int pos = x + (y / 8) * DISPLAY_WIDTH;
         if (on) {

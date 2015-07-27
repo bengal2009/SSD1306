@@ -1,47 +1,19 @@
 import com.pi4j.io.gpio.*;
 import com.pi4j.io.gpio.event.GpioPinDigitalStateChangeEvent;
 import com.pi4j.io.gpio.event.GpioPinListenerDigital;
+
+import java.util.HashMap;
+
 /**
  * Created by Lin on 2015/7/24.
  */
 public class CFont {
 
-   private static final int SSD1306_SETCONTRAST =0x81;
-    private static final int SSD1306_DISPLAYALLON_RESUME= 0xA4;
-           private static final int SSD1306_DISPLAYALLON= 0xA5;
-           private static final int SSD1306_NORMALDISPLAY= 0xA6;
-           private static final int SSD1306_INVERTDISPLAY= 0xA7;
-           private static final int SSD1306_DISPLAYOFF= 0xAE;
-           private static final int SSD1306_DISPLAYON= 0xAF;
 
-           private static final int SSD1306_SETDISPLAYOFFSET= 0xD3;
-           private static final int SSD1306_SETCOMPINS= 0xDA;
-
-           private static final int SSD1306_SETVCOMDETECT= 0xDB;
-
-           private static final int SSD1306_SETDISPLAYCLOCKDIV= 0xD5;
-           private static final int SSD1306_SETPRECHARGE= 0xD9;
-
-           private static final int SSD1306_SETMULTIPLEX =0xA8;
-
-           private static final int SSD1306_SETLOWCOLUMN= 0x00;
-           private static final int SSD1306_SETHIGHCOLUMN =0x10;
-
-           private static final int SSD1306_SETSTARTLINE =0x40;
-
-           private static final int SSD1306_MEMORYMODE =0x20;
-
-           private static final int SSD1306_COMSCANINC= 0xC0;
-           private static final int SSD1306_COMSCANDEC =0xC8;
-
-           private static final int SSD1306_SEGREMAP= 0xA0;
-
-           private static final int SSD1306_CHARGEPUMP= 0x8D;
-
-           private static final int SSD1306_EXTERNALVCC= 0x1;
-           private static final int SSD1306_SWITCHCAPVCC= 0x2;
 
 // Scrollingprivate static final ints
+            private static final byte SSD1306_NORMALDISPLAY = (byte) 0xA6;
+            private static final byte SSD1306_INVERTDISPLAY = (byte) 0xA7;
            private static final int SSD1306_ACTIVATE_SCROLL= 0x2F;
            private static final int SSD1306_DEACTIVATE_SCROLL= 0x2E;
            private static final int SSD1306_SET_VERTICAL_SCROLL_AREA= 0xA3;
@@ -49,8 +21,19 @@ public class CFont {
            private static final int SSD1306_LEFT_HORIZONTAL_SCROLL= 0x27;
            private static final int SSD1306_VERTICAL_AND_RIGHT_HORIZONTAL_SCROLL= 0x29;
            private static final int SSD1306_VERTICAL_AND_LEFT_HORIZONTAL_SCROLL= 0x2A;
-    private static SSD1306Lib SSD1;
+            private static final int Mnu_Music = 1;
+            private static final int Mnu_Weather = 2;
+            private static final int Mnu_Led = 3;
+            private static final int Mnu_Led1 = 4;
+            private static final int Mnu_Son = 5;
+            private static final int Mnu_Exit = 6;
+
+            private static SSD1306Lib SSD1;
+            private static int PageIndex=1,MenuIndex=1;
+            private static boolean RunMode=false;
+
     static GpioController gpio = GpioFactory.getInstance();
+    private static HashMap<Integer,String> MenuHash=new HashMap<Integer,String>();
     public static void main(String[] args) throws Exception {
         SSD1= new SSD1306Lib();
         GpioPinDigitalInput[] pins = {
@@ -60,16 +43,34 @@ public class CFont {
         };
         boolean DefaultInv=false;
         java.util.Scanner sc=new java.util.Scanner(System.in);
+        SSD1.ReadFontFile("/home/pi/prog/2.TXT");
+        MenuInit();
+        MenuDisplay();
+
         // create GPIO listener
         GpioPinListenerDigital listener  = new GpioPinListenerDigital() {
             @Override
             public void handleGpioPinDigitalStateChangeEvent(GpioPinDigitalStateChangeEvent event) {
                 // display pin state on console
                 if(event.getState().toString()=="LOW") {
-                    System.out.println(" --> GPIO PIN STATE CHANGE: " + event.getPin() + " = " + event.getState()+":"+event.getPin().getName() );
+//                    System.out.println(" --> GPIO PIN STATE CHANGE: " + event.getPin() + " = " + event.getState()+":"+event.getPin().getName() );
 
                     try {
+                        if(event.getPin().getName()=="SEL"& RunMode==false){
+                            MenuIndex++;
 
+//                            System.out.println("MenuHashSize:"+MenuHash.size());
+                            if(MenuIndex>MenuHash.size()) MenuIndex=1;
+                            MenuDisplay();
+                        }
+                        if(event.getPin().getName()=="ENTER"){
+                            if(RunMode==true) {
+                                MenuDisplay();
+                                RunMode=!RunMode;
+                            }else {
+                                MenuAction();
+                            }
+                        }
 
 
 
@@ -82,17 +83,7 @@ public class CFont {
             }
         };
         gpio.addListener(listener, pins);
-        SSD1.ReadFontFile("/home/pi/prog/2.TXT");
-        SSD1.clear();
-        for (Integer i = 1; i < 5; i++) {
-            if(i==1){
-                SSD1.DispStr(16, (i - 1) * 16, i.toString() + ".林郁庭ABCD",true);
-            }
-            else{
-            SSD1.DispStr(16, (i - 1) * 16, i.toString() + ".林郁庭ABCD",false);
-            }
-        }
-        SSD1.update();
+
         /*for(Integer j=0;j<8;j++) {
             SSD1.clear();
             for (Integer i = 1; i < 5; i++) {
@@ -124,6 +115,66 @@ public class CFont {
 
 //        waitForKeypress();
 
+    }
+    private static void MenuAction()throws Exception {
+        switch(MenuIndex)
+        {
+            case Mnu_Music:
+                System.out.println( MenuHash.get(Mnu_Music));
+                break;
+            case Mnu_Weather:
+                System.out.println( MenuHash.get(Mnu_Weather));
+                break;
+            case Mnu_Led:
+                System.out.println( MenuHash.get(Mnu_Led));
+                break;
+            case Mnu_Led1:
+                System.out.println(MenuHash.get(Mnu_Led1));
+                SSD1.clear();
+                SSD1.DispStr(32, 16, "11111", false);
+                SSD1.update();
+                RunMode=!RunMode;
+
+                break;
+            case Mnu_Son:
+                System.out.println( MenuHash.get(Mnu_Son));
+                break;
+            case Mnu_Exit:
+                System.out.println( MenuHash.get(Mnu_Exit));
+                System.exit(1) ;
+                break;
+
+        }
+    }
+  private static void MenuInit()throws Exception {
+        MenuHash.put(Mnu_Music,"Music");
+        MenuHash.put(Mnu_Weather, "Weather");
+        MenuHash.put(Mnu_Led, "Led");
+        MenuHash.put(Mnu_Led1,"Led1");
+      MenuHash.put(Mnu_Son,"林郁庭ABCD");
+        MenuHash.put(Mnu_Exit, "Exit");
+
+
+    }
+    private static void MenuDisplay()  throws Exception
+    {
+        SSD1.clear();
+        System.out.println(MenuHash.size() + MenuHash.get(1) + "MenuIndex:" + MenuIndex);
+        Integer High=0;
+        PageIndex=MenuIndex/5;
+        for (Integer i = (PageIndex)*4+1; i <  (PageIndex)*4+5; i++) {
+            if(i<=MenuHash.size()) {
+
+                if (i == MenuIndex) {
+
+                    SSD1.DispStr(16, High, MenuHash.get(i), true);
+                } else {
+                    SSD1.DispStr(16, High, MenuHash.get(i), false);
+                }
+            }
+            High+=16;
+        }
+        SSD1.update();
     }
     public static void invertDisplay(boolean Inv)
     {

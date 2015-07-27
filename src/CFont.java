@@ -1,3 +1,6 @@
+import com.pi4j.io.gpio.*;
+import com.pi4j.io.gpio.event.GpioPinDigitalStateChangeEvent;
+import com.pi4j.io.gpio.event.GpioPinListenerDigital;
 /**
  * Created by Lin on 2015/7/24.
  */
@@ -47,10 +50,38 @@ public class CFont {
            private static final int SSD1306_VERTICAL_AND_RIGHT_HORIZONTAL_SCROLL= 0x29;
            private static final int SSD1306_VERTICAL_AND_LEFT_HORIZONTAL_SCROLL= 0x2A;
     private static SSD1306Lib SSD1;
+    static GpioController gpio = GpioFactory.getInstance();
     public static void main(String[] args) throws Exception {
         SSD1= new SSD1306Lib();
+        GpioPinDigitalInput[] pins = {
+                gpio.provisionDigitalInputPin(RaspiPin.GPIO_13,"ENTER", PinPullResistance.PULL_UP),
+                gpio.provisionDigitalInputPin(RaspiPin.GPIO_12,"SEL", PinPullResistance.PULL_UP),
+
+        };
         boolean DefaultInv=false;
         java.util.Scanner sc=new java.util.Scanner(System.in);
+        // create GPIO listener
+        GpioPinListenerDigital listener  = new GpioPinListenerDigital() {
+            @Override
+            public void handleGpioPinDigitalStateChangeEvent(GpioPinDigitalStateChangeEvent event) {
+                // display pin state on console
+                if(event.getState().toString()=="LOW") {
+                    System.out.println(" --> GPIO PIN STATE CHANGE: " + event.getPin() + " = " + event.getState()+":"+event.getPin().getName() );
+
+                    try {
+
+
+
+
+                    }
+                    catch (Exception E)
+                    {
+
+                    }
+                }
+            }
+        };
+        gpio.addListener(listener, pins);
         SSD1.ReadFontFile("/home/pi/prog/2.TXT");
         SSD1.clear();
         for (Integer i = 1; i < 5; i++) {

@@ -2,7 +2,11 @@ import com.pi4j.io.gpio.*;
 import com.pi4j.io.gpio.event.GpioPinDigitalStateChangeEvent;
 import com.pi4j.io.gpio.event.GpioPinListenerDigital;
 
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.HashMap;
+import java.util.Locale;
 
 /**
  * Created by Lin on 2015/7/24.
@@ -44,6 +48,7 @@ public class CFont {
         boolean DefaultInv=false;
         java.util.Scanner sc=new java.util.Scanner(System.in);
         SSD1.ReadFontFile("/home/pi/prog/2.TXT");
+
         MenuInit();
         MenuDisplay();
 
@@ -116,6 +121,42 @@ public class CFont {
 //        waitForKeypress();
 
     }
+    private  static  void ShowClock() throws Exception
+    {
+        int width=128, height=64;
+        int hours=0, minutes=0, seconds=0;
+        String timeString = "";
+
+
+        while(RunMode) {
+            SSD1.clear();
+            Calendar cal = Calendar.getInstance();
+            hours = cal.get( Calendar.HOUR_OF_DAY );
+
+            if ( hours > 12 ) hours -= 12;
+            minutes = cal.get( Calendar.MINUTE );
+            seconds = cal.get(Calendar.SECOND);
+
+            SimpleDateFormat formatter
+                    = new SimpleDateFormat( "hh:mm:ss", Locale.getDefault() );
+            hours = cal.get( Calendar.HOUR_OF_DAY );
+            if ( hours > 12 ) hours -= 12;
+            minutes = cal.get(Calendar.MINUTE);
+            seconds = cal.get(Calendar.SECOND);
+            Date date = cal.getTime();
+            timeString = formatter.format( date );
+            timeString=timeString.replace(":", "/");
+            SSD1.DispStr(16, 16, "现在时间", false);
+            SSD1.DispStr(16, 32, timeString, false);
+
+//            SSD1.drawString(timeString, 10, height - 10, true);
+            SSD1.update();
+            Thread.sleep(1000);
+        }
+
+    }
+
+
     private static void MenuAction()throws Exception {
         switch(MenuIndex)
         {
@@ -126,7 +167,10 @@ public class CFont {
                 System.out.println( MenuHash.get(Mnu_Weather));
                 break;
             case Mnu_Led:
-                System.out.println( MenuHash.get(Mnu_Led));
+                System.out.println(MenuHash.get(Mnu_Led));
+                RunMode=!RunMode;
+                ShowClock();
+//                RunMode=!RunMode;
                 break;
             case Mnu_Led1:
                 System.out.println(MenuHash.get(Mnu_Led1));

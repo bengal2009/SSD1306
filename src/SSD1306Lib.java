@@ -303,6 +303,7 @@ public class SSD1306Lib {
     }
     public synchronized  void setPixel(int x, int y, boolean on) {
         final int pos = x + (y / 8) * DISPLAY_WIDTH;
+
         if (on) {
             this.imageBuffer[pos] |= (1 << (y & 0x07));
         } else {
